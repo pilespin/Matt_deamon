@@ -30,3 +30,8 @@
 
 # Debug files
 *.dSYM/
+
+._.DS_Store
+.DS_Store
+Matt_daemon
+matt_daemon.log

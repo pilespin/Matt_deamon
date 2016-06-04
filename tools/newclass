@@ -1,0 +1,10 @@
+#! /bin/sh
+
+SRC="../src/"
+INCLUDE="../includes/" 
+
+#CPP
+sed "s/NewName/$1/g" "new_class.cpp" > "$SRC$1.cpp"
+
+#HPP
+sed "s/NewName/$1/g" "new_class.hpp" > "$INCLUDE$1.hpp"
