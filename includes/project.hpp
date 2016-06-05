@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2016/05/15 18:48:50 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/03 14:59:32 by pilespin         ###   ########.fr       */
+/*   Created: 2016/06/05 14:28:05 by pilespin          #+#    #+#             */
+/*   Updated: 2016/06/05 19:51:26 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,5 +16,7 @@
 #include <iostream>
 #include <csignal>
 #include <fstream>
+#include <list>
+#include <iterator>
 
 #endif

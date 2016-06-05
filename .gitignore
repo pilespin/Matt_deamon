@@ -35,3 +35,4 @@
 .DS_Store
 Matt_daemon
 matt_daemon.log
+matt_daemon.lock

@@ -6,13 +6,12 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/05/30 17:05:03 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/04 21:08:18 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/05 18:40:26 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <project.hpp>
-#include "Socket.hpp"
-#include "Tintin_reporter.hpp"
+#include "Server.hpp"
 
 void signal(int sig)
 {
@@ -30,37 +29,17 @@ void catch_all_signals()
 
 int main()
 {
-	Socket s;
-	Tintin_reporter t;
+	Server	s;
+
 	// catch_all_signals();
 
-	std::string str;
+	// int fd;
 
-	int cs;
-	s.createServer(4242);
-	std::cout << "Started " << s << std::endl;
+	// fd = open("matt_daemon.lock", O_RDWR | O_CREAT);
+	// if ((flock(fd, LOCK_EX)) == 0)
+	// 	std::cout << "Locked" << std::endl;
+	// else
+	// 	std::cout << "Not available" << std::endl;
 
-	int pid = 1;
-	while (pid > 0)
-	{
-		cs = s.ServerAcceptConnexion();
-		if (cs != -1)
-		{
-			pid = fork();
-			if (pid > 0)
-				close(cs);
-		}
-		else
-			exit(0);
-	}
-	while (1)
-	{
-		str = s.ServerReceiveCmd(cs);
-		t.newPost(str);
-	}
-	close(cs);
-	exit(0);
-
-	std::cout << "END" << std::endl;
-	return (0);
+	s.lunchServer(4242, 3);
 }
