@@ -6,7 +6,7 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/04 15:29:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/04 20:38:16 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/05 20:39:27 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ int		Tintin_reporter::getValue() const	{	return (this->_val);	}
 void	Tintin_reporter::newPost(std::string post) {
 	std::ofstream Mr("matt_daemon.log", std::ios::app);
 	Mr << this->getTime() << " " << post << std::endl;
-	std::cout << "TINTIN post: \"" << post << "\" " << std::endl;
+	// std::cout << "TINTIN post: \"" << post << "\" " << std::endl;
 }
 
 std::string	Tintin_reporter::getTime() {
@@ -79,5 +79,3 @@ std::string	Tintin_reporter::getTime() {
 //   int tm_isdst; // hours of daylight savings time
 // }
 }
-
-

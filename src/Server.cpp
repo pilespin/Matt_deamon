@@ -6,7 +6,7 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 17:50:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/05 20:24:49 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/05 20:33:26 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ Server	&Server::operator=(Server const &rhs) {
 	if (this != &rhs)
 	{
 		this->_socket = rhs._socket;
-		this->nbClient = rhs.nbClient;
+		this->_nbClient = rhs._nbClient;
 		this->child = rhs.child;
 	}
 	return (*this);
