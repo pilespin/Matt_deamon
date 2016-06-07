@@ -18,8 +18,9 @@
 #define BIND_ERROR					"bind error"
 #define SOCKET_ERROR				"socket error"
 
-Server::Server() {	
+Server::Server() {
 	this->_socket 	= -1;
+	this->_iterBuffer = 0;
 }
 
 Server::~Server()					{}
@@ -88,12 +89,13 @@ int		Server::ServerAcceptConnexion() {
 std::string	Server::ServerReceiveCmd(int cs) {
 
 	std::string		str;
-	char 			buf[2];
-	int 			len	= 0;
+	int 					len	= 0;
+	int						i = 0;
 	while (1)
 	{
 		// len = recv(cs, &buf, 1, MSG_DONTWAIT);
-		len = recv(cs, &buf, 1, 0);
+		len = recv(cs, &this->_buffer, Server::BUFFER, 0);
+		this->_buffer[len] = '\0';
 		if (len == 1)
 		{
 			buf[1] = '\0';

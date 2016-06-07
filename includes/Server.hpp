@@ -37,6 +37,7 @@ public:
 
 	void		lunchServer(int port, unsigned long nbClient);
 	int			getSocket() const;
+	static const int	BUFFER = 1000;
 
 private:
 	void		createServer(int port);
@@ -48,6 +49,8 @@ private:
 	int 			_socket;
 	unsigned long	_nbClient;
 	std::list<int>	child;
+	char						_buffer[Server::BUFFER + 1];
+	int							_iterBuffer;
 };
 
 std::ostream &operator<<(std::ostream &o, Server &c);

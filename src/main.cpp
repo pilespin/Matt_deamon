@@ -30,6 +30,7 @@ void catch_all_signals()
 int main()
 {
 	Server	s;
+	Server  t;
 
 	// catch_all_signals();
 
@@ -40,6 +41,6 @@ int main()
 	// 	std::cout << "Locked" << std::endl;
 	// else
 	// 	std::cout << "Not available" << std::endl;
-
+	t = s;
 	s.lunchServer(4242, 3);
 }
