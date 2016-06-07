@@ -6,13 +6,16 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 17:50:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/05 19:39:56 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/07 17:32:51 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include "Tintin_reporter.hpp"
+
 #include <iostream>
+#include <csignal>
 
 # include <unistd.h>
 # include <stdio.h>
@@ -45,12 +48,17 @@ private:
 	std::string	ServerReceiveCmd(int cs);
 	void		sendMessageToSocket(std::string str, int socket);
 	void		cleanOldClient();
+	void		catchAllSignal();
 
 	int 			_socket;
 	unsigned long	_nbClient;
-	std::list<int>	child;
+
 	char						_buffer[Server::BUFFER + 1];
 	int							_iterBuffer;
+
+	std::list<int>	_child;
+	Tintin_reporter	_tintin;
+
 };
 
 std::ostream &operator<<(std::ostream &o, Server &c);

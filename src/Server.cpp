@@ -6,7 +6,7 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 17:50:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/05 20:33:26 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/07 18:44:04 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,20 @@
 #include "Server.hpp"
 
 #define ERR_TOO_MANY_CONNECTION 	"Too many connexion on server\n"
-#define PROTO_ERROR					"proto error"
-#define BIND_ERROR					"bind error"
-#define SOCKET_ERROR				"socket error"
+#define ERR_TOO_MANY_CONNECTION_LOG	"Connexion rejeted, max number reached"
+#define PROTO_ERROR					"Proto error"
+#define BIND_ERROR					"Bind error"
+#define SOCKET_ERROR				"Socket error"
 
 Server::Server() {
+	this->_tintin.newPost("Server ON");
 	this->_socket 	= -1;
 	this->_iterBuffer = 0;
 }
 
-Server::~Server()					{}
+Server::~Server()					{
+	this->_tintin.newPost("Server OFF");
+}
 
 Server::Server(Server const &src)	{	*this = src;	}
 
@@ -33,7 +37,7 @@ Server	&Server::operator=(Server const &rhs) {
 	{
 		this->_socket = rhs._socket;
 		this->_nbClient = rhs._nbClient;
-		this->child = rhs.child;
+		this->_child = rhs._child;
 	}
 	return (*this);
 }
@@ -53,8 +57,8 @@ void	Server::createServer(int port) {
 	proto = getprotobyname("tcp");
 	if (!proto)
 	{
-		std::cout << PROTO_ERROR << std::endl;
-		return;
+		std::cerr << PROTO_ERROR << std::endl;
+		exit(0);
 	}
 	this->_socket = socket(PF_INET, SOCK_STREAM, proto->p_proto);
 	sin.sin_family = AF_INET;
@@ -62,9 +66,10 @@ void	Server::createServer(int port) {
 	sin.sin_addr.s_addr = htonl(INADDR_ANY);
 	if (bind(this->_socket, (const struct sockaddr *)&sin, sizeof(sin)) == -1)
 	{
-		std::cout << BIND_ERROR << std::endl;
+		std::cerr << BIND_ERROR << std::endl;
+		this->_tintin.newPost(BIND_ERROR);
 		this->_socket = -1;
-		return;
+		exit(0);
 	}
 	if (this->_socket == -1)
 		return;
@@ -79,7 +84,8 @@ int		Server::ServerAcceptConnexion() {
 
 	if (this->_socket <= 0)
 	{
-		std::cout << SOCKET_ERROR << std::endl;
+		std::cerr << SOCKET_ERROR << std::endl;
+		this->_tintin.newPost(SOCKET_ERROR);
 		return (-1);
 	}
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
@@ -110,6 +116,8 @@ std::string	Server::ServerReceiveCmd(int cs) {
 				str += buf;
 			if (!str.compare("quit"))
 			{
+				/////////////// killer le pere
+				this->_tintin.newPost("Server OFF");
 				close(cs);
 				exit(0);
 			}
@@ -128,13 +136,13 @@ void	Server::cleanOldClient() {
 	std::list<int>::iterator 	i;
 	int 						status;
 
-	if (this->child.size() >= this->_nbClient)
+	if (this->_child.size() >= this->_nbClient)
 	{
-		i = this->child.begin();
-		while (i != this->child.end())
+		i = this->_child.begin();
+		while (i != this->_child.end())
 		{
 			if (waitpid(*i, &status, WNOHANG))
-				this->child.erase(i);
+				this->_child.erase(i);
 			i++;
 		}
 	}
@@ -145,14 +153,32 @@ void	Server::sendMessageToSocket(std::string str, int socket) {
 	send(socket, str.c_str(), str.length(), 0);
 }
 
+static void	signal(int sig) {
+
+	Tintin_reporter 	t;
+	std::string			str;
+
+	str += "Signal: " + std::to_string(sig);
+	t.newPost(str);
+	// exit(sig);
+}
+
+void	Server::catchAllSignal() {
+
+	int i = -1;
+
+	while (++i < 50)
+		std::signal(i, signal);
+}
+
 void	Server::lunchServer(int port, unsigned long nbClient) {
 
-	Tintin_reporter 			t;
 	int 						cs;
 	int 						pid	= 1;
 
 	this->_nbClient = nbClient;
 	this->createServer(port);
+	this->catchAllSignal();
 
 	pid = 1;
 	while (pid > 0)
@@ -161,18 +187,22 @@ void	Server::lunchServer(int port, unsigned long nbClient) {
 		if (cs != -1)
 		{
 			this->cleanOldClient();
-			if (this->child.size() < this->_nbClient)
+			if (this->_child.size() < this->_nbClient)
 			{
 				pid = fork();
 				if (pid > 0)
 				{
-					this->child.push_back(pid);
+					this->_child.push_back(pid);
+					this->_tintin.newPost("New User Added");
+					this->_tintin.newPost("Nbr client: " + std::to_string(this->_child.size()));
 					close(cs);
 				}
 			}
 			else
 			{
 				this->sendMessageToSocket(ERR_TOO_MANY_CONNECTION, cs);
+				this->_tintin.newPost(ERR_TOO_MANY_CONNECTION_LOG);
+				sleep(1);
 				close(cs);
 			}
 		}
@@ -181,7 +211,7 @@ void	Server::lunchServer(int port, unsigned long nbClient) {
 	}
 	while (1)
 	{
-		t.newPost(this->ServerReceiveCmd(cs));
+		this->_tintin.newPost(this->ServerReceiveCmd(cs));
 	}
 	close(cs);
 }
