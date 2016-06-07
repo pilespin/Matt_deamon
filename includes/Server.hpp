@@ -40,7 +40,7 @@ public:
 
 	void		lunchServer(int port, unsigned long nbClient);
 	int			getSocket() const;
-	static const int	BUFFER = 1000;
+	static const int	BUFFER = 2048;
 
 private:
 	void		createServer(int port);

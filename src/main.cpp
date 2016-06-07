@@ -44,9 +44,8 @@ void deamonize()
 
 int main()
 {
-	deamonize();
+	//deamonize();
 	Server	s;
-	Server  t;
 
 	// int fd;
 
@@ -55,6 +54,5 @@ int main()
 	// 	std::cout << "Locked" << std::endl;
 	// else
 	// 	std::cout << "Not available" << std::endl;
-	t = s;
 	s.lunchServer(4242, 3);
 }
