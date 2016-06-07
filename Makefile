@@ -14,7 +14,7 @@
 	
 NAME	=	Matt_daemon
 
-CC		=	g++
+CC		=	g++ -std=c++11
 FLAGS	=	-Wall -Wextra -Werror
 
 SDIR	=	src/

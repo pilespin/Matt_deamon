@@ -19,9 +19,10 @@
 #define BIND_ERROR					"Bind error"
 #define SOCKET_ERROR				"Socket error"
 
-Server::Server() {	
+Server::Server() {
 	this->_tintin.newPost("Server ON");
 	this->_socket 	= -1;
+	this->_iterBuffer = 0;
 }
 
 Server::~Server()					{
@@ -94,37 +95,43 @@ int		Server::ServerAcceptConnexion() {
 std::string	Server::ServerReceiveCmd(int cs) {
 
 	std::string		str;
-	char 			buf[2];
-	int 			len	= 0;
+	int 					len	= 0;
+	int						i;
 	while (1)
 	{
 		// len = recv(cs, &buf, 1, MSG_DONTWAIT);
-		len = recv(cs, &buf, 1, 0);
-		if (len == 1)
+		if (this->_iterBuffer)
+			i = this->_iterBuffer;
+		else
 		{
-			buf[1] = '\0';
-			if (buf[0] == '\n' && str.length() == 0)
+			if (0 >= (len = recv(cs, &this->_buffer, Server::BUFFER, 0)))
 			{
-			}
-			else if (buf[0] == '\n' && str.length() > 0)
-			{
-				return (str);
-			}
-			else
-				str += buf;
-			if (!str.compare("quit"))
-			{
-				/////////////// killer le pere
-				this->_tintin.newPost("Server OFF");
 				close(cs);
 				exit(0);
 			}
+			this->_buffer[len] = '\0';
+			i = 0;
 		}
-		else
+		while (this->_buffer[i])
 		{
-			close(cs);
-			exit(0);
+			if (this->_buffer[i] == '\n')
+			{
+				this->_iterBuffer = i + 1;
+				if (!str.compare("quit"))
+				{
+					/////////////// killer le pere
+					this->_tintin.newPost("Server OFF");
+					close(cs);
+					exit(0);
+				}
+				return (str);
+			}
+			else
+				str += this->_buffer[i];
+			i++;
 		}
+		this->_iterBuffer = 0;
+
 	}
 	return (str);
 }
