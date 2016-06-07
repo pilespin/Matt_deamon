@@ -6,11 +6,14 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/04 15:29:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/05 20:39:27 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/07 17:22:42 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Tintin_reporter.hpp"
+
+// #define LOG_PATH					 "/var/log/matt_daemon/matt_daemon.log"
+#define LOG_PATH					 "matt_daemon.log"
 
 Tintin_reporter::Tintin_reporter() 						{	this->_val = 0;	}
 
@@ -37,9 +40,8 @@ int		Tintin_reporter::getValue() const	{	return (this->_val);	}
 ///////////////////////////////////////////////////////////////////////////////
 
 void	Tintin_reporter::newPost(std::string post) {
-	std::ofstream Mr("matt_daemon.log", std::ios::app);
-	Mr << this->getTime() << " " << post << std::endl;
-	// std::cout << "TINTIN post: \"" << post << "\" " << std::endl;
+	std::ofstream Log(LOG_PATH, std::ios::app);
+	Log << this->getTime() << " " << post << std::endl;
 }
 
 std::string	Tintin_reporter::getTime() {

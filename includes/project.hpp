@@ -6,7 +6,7 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 14:28:05 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/05 19:51:26 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/07 16:33:10 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 # define PROJECT_HPP
 
 #include <iostream>
-#include <csignal>
 #include <fstream>
 #include <list>
 #include <iterator>

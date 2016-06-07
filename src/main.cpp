@@ -6,32 +6,46 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/05/30 17:05:03 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/05 18:40:26 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/07 18:48:11 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <project.hpp>
 #include "Server.hpp"
 
-void signal(int sig)
-{
-	std::cout << "Signal:" << sig << std::endl;
-	// exit(sig);
-}
+#define ERROR_NEED_ROOT	"You need to be root to perform this action"
 
-void catch_all_signals()
+void deamonize()
 {
-	int i;
-	i = -1;
-	while (++i < 50)
-		std::signal(i, signal);
+	// if (getuid())
+	// {
+	// 	std::cerr << ERROR_NEED_ROOT << std::endl;
+	// 	exit(0);
+	// }
+	int pid;
+
+	if ((pid = fork()) < 0)
+	{
+		std::cerr << "Fork fail" << std::endl;
+		exit(0);
+	}
+	else if (pid > 0)
+		exit(0);
+	// umask(0);
+	// int id = setsid();
+	// std::cerr << "id :" << id << std::endl;
+
+	// close(STDIN_FILENO);
+	// close(STDOUT_FILENO);
+	// close(STDERR_FILENO);
+
+	// while (1) {}
 }
 
 int main()
 {
+	deamonize();
 	Server	s;
-
-	// catch_all_signals();
 
 	// int fd;
 
