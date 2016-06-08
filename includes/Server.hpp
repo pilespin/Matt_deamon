@@ -6,7 +6,7 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 17:50:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/07 17:32:51 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/08 16:11:55 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,9 @@ public:
 	Server(Server const &src);
 	Server &operator=(Server const &rhs);
 
-	void		lunchServer(int port, unsigned long nbClient);
+	void		launchServer(int port, unsigned long nbClient);
 	int			getSocket() const;
+
 	static const int	BUFFER = 2048;
 
 private:
@@ -53,8 +54,8 @@ private:
 	int 			_socket;
 	unsigned long	_nbClient;
 
-	char						_buffer[Server::BUFFER + 1];
-	int							_iterBuffer;
+	char			_buffer[Server::BUFFER + 1];
+	int				_iterBuffer;
 
 	std::list<int>	_child;
 	Tintin_reporter	_tintin;

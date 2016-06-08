@@ -6,7 +6,7 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 17:50:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/07 18:44:04 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/08 16:31:58 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,16 +124,18 @@ std::string	Server::ServerReceiveCmd(int cs) {
 					close(cs);
 					exit(0);
 				}
-				return (str);
+				if (str.length() > 0)
+					return (str);
+				else
+					return ("Empty line from user");
 			}
 			else
 				str += this->_buffer[i];
 			i++;
 		}
 		this->_iterBuffer = 0;
-
 	}
-	return (str);
+	return ("STRANGE ERROR");
 }
 
 void	Server::cleanOldClient() {
@@ -176,14 +178,14 @@ void	Server::catchAllSignal() {
 		std::signal(i, signal);
 }
 
-void	Server::lunchServer(int port, unsigned long nbClient) {
+void	Server::launchServer(int port, unsigned long nbClient) {
 
-	int 						cs;
-	int 						pid	= 1;
+	int 	cs;
+	int 	pid	= 1;
 
 	this->_nbClient = nbClient;
 	this->createServer(port);
-	this->catchAllSignal();
+	// this->catchAllSignal();
 
 	pid = 1;
 	while (pid > 0)
