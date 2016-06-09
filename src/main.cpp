@@ -14,18 +14,21 @@
 #include "Server.hpp"
 
 #include <errno.h>  
+#include <sys/file.h>
 
 #define ERROR_NEED_ROOT	"You need to be root to perform this action"
+#define FILE_LOCK		"matt_daemon.lock"
 
 void deamonize()
 {
-	// if (getuid())
-	// {
-	// 	std::cerr << ERROR_NEED_ROOT << std::endl;
-	// 	exit(0);
-	// }
-	int pid;
+	if (getuid())
+	{
+		std::cerr << ERROR_NEED_ROOT << std::endl;
+		exit(0);
+	}
 
+	setsid();
+	int pid;
 	if ((pid = fork()) < 0)
 	{
 		std::cerr << "Fork fail" << std::endl;
@@ -33,6 +36,7 @@ void deamonize()
 	}
 	else if (pid > 0)
 		exit(0);
+	// chdir("/");
 	// umask(0);
 	// int id = setsid();
 	// std::cerr << "id :" << id << std::endl;
@@ -44,42 +48,31 @@ void deamonize()
 	// while (1) {}
 }
 
+void check_no_instance_running()
+{
+	int fd;
+
+	fd = open(FILE_LOCK, O_CREAT);
+	if (flock(fd, LOCK_EX | LOCK_NB))
+	{
+		std::cout << "Matt is not available" << std::endl;
+		close(fd);
+		unlink(FILE_LOCK);
+		exit(0);
+	}
+}
+
 int main()
 {
-	//deamonize();
+	// int pid;
+	// if ((pid = fork()) == 0)
+	// {
+	check_no_instance_running();
+	// deamonize();
 
 	Server	s;
-
-	// int fd;
-	// int fd2;
-	// int ret;
-
-	// fd = open("matt_daemon.lock", O_CREAT);
-	// ret = flock(fd, LOCK_EX);
-	// fd2 = open("matt_daemon.lock", O_CREAT);
-
-	// // FILE *fp = fopen("matt_daemon.lock", "r+");
-	
-	// // flock(fileno(fp), LOCK_EX);
-
-	// // fd = open("matt_daemon.lock", O_RDWR | O_CREAT, 0777);
-	// std::cout << "fd: " << fd << std::endl;
-
-	// // ret = flock(fd, LOCK_EX);
-	// std::cout << "flock: " << ret << std::endl;
-
-	// // fd2 = open("matt_daemon.lock", O_RDWR | O_CREAT, 0777);
-	// std::cout << "fd2: " << fd2 << std::endl;
-
-	// if (ret == -1)
-	// {
-		// std::cout << "ERROR" << ret << std::endl;
-	// 	perror("Error");
-	// 	// std::cout << "ERROR" <<  errno() << ret << std::endl;
+	s.launchServer(4240, 3);
 	// }
-	// if ((ret = flock(fd, LOCK_EX)))
-	// 	std::cout << "Locked" << ret << std::endl;
-	// else
-	// 	std::cout << "Not available" << ret << std::endl;
-	s.launchServer(4243, 3);
+	// while(1) {}
+	return(0);
 }

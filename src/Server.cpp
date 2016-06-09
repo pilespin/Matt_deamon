@@ -73,7 +73,7 @@ void	Server::createServer(int port) {
 	}
 	if (this->_socket == -1)
 		return;
-	listen(this->_socket, 1);
+	listen(this->_socket, this->_nbClient);
 }
 
 int		Server::ServerAcceptConnexion() {
