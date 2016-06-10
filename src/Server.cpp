@@ -135,7 +135,6 @@ void		Server::ServerAcceptConnexion() {
 std::string Server::client_read(int cs)
 {
 	int	len;
-	std::string	str;
 
 	len = recv(cs, &this->_buffer, Server::BUFFER, 0);
 	if (len <= 0)
@@ -146,8 +145,7 @@ std::string Server::client_read(int cs)
 	else
 	{
 		this->_buffer[len] = '\0';
-		str = this->_buffer;
-		this->_tintin.newPost(this->ServerReceiveCmd(cs));
+		this->_tintin.newPost(this->_buffer);
 	}
 }
 

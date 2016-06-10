@@ -50,6 +50,7 @@ private:
 	void		sendMessageToSocket(std::string str, int socket);
 	void		cleanOldClient();
 	void		catchAllSignal();
+	void		init_fd();
 
 	int 						_socket;
 	unsigned long		_nbClient;
@@ -58,6 +59,9 @@ private:
 	int							_maxFd;
 	char						_buffer[Server::BUFFER + 1];
 	int							_iterBuffer;
+	fd_set					_fdRead;
+	fd_set					_fdWrite;
+	int							_max;
 
 	std::list<int>	_child;
 	Tintin_reporter	_tintin;
