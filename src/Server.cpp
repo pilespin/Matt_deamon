@@ -75,8 +75,48 @@ void	Server::createServer(int port) {
 		return;
 	listen(this->_socket, this->_nbClient);
 }
+void	Server::check_fd(int r)
+{
+	int	i;
 
-int		Server::ServerAcceptConnexion() {
+  i = 0;
+  while ((i < this->_maxFd) && (r > 0))
+    {
+      if (FD_ISSET(i, &this->_fdRead))
+				this->client_read(i);
+      if (FD_ISSET(i, &this->_fdWrite))
+				this->client_write(i);
+      if (FD_ISSET(i, &this->_fdRead) ||
+	  FD_ISSET(i, &this->_fdWrite))
+				r--;
+      i++;
+    }
+}
+
+void	Server::init_fd()
+{
+		int	i;
+		int	max;
+		int	r;
+		i = 0;
+		max = 0;
+		FD_ZERO(&this->_fdRead);
+		FD_ZERO(&this->_fdWrite);
+		while (i < this->_maxFd)
+		{
+			if (this->_fds[i].type != FD_FREE)
+			{
+				FD_SET(i, this->_fdRead);
+				max++;
+			}
+			i++;
+		}
+		r = select(max + 1, &this->_fdRead, &this->_fdWrite, NULL,NULL);
+		this->ServerAcceptConnexion();
+		this->check_fd(r);
+}
+
+void		Server::ServerAcceptConnexion() {
 	int					cs;
 	unsigned int		cslen;
 	struct sockaddr_in	csin;
@@ -89,7 +129,26 @@ int		Server::ServerAcceptConnexion() {
 		return (-1);
 	}
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
-	return (cs);
+	this->_fds[cs].type = FD_CLIENT;
+}
+
+std::string Server::client_read(int cs)
+{
+	int	len;
+	std::string	str;
+
+	len = recv(cs, &this->_buffer, Server::BUFFER, 0);
+	if (len <= 0)
+	{
+		close(cs);
+		this->_fds[cs].type = FD_FREE;
+	}
+	else
+	{
+		this->_buffer[len] = '\0';
+		str = this->_buffer;
+		this->_tintin.newPost(this->ServerReceiveCmd(cs));
+	}
 }
 
 std::string	Server::ServerReceiveCmd(int cs) {
@@ -186,27 +245,12 @@ void	Server::launchServer(int port, unsigned long nbClient) {
 	this->_nbClient = nbClient;
 	this->createServer(port);
 	// this->catchAllSignal();
+	cs = this->ServerAcceptConnexion();
 
-	pid = 1;
-	while (pid > 0)
-	{
-		cs = this->ServerAcceptConnexion();
-		if (cs != -1)
-		{
-			this->cleanOldClient();
-			if (this->_child.size() < this->_nbClient)
-			{
-				pid = fork();
-				if (pid > 0)
-				{
-					this->_child.push_back(pid);
 					this->_tintin.newPost("New User Added");
 					this->_tintin.newPost("Nbr client: " + std::to_string(this->_child.size()));
 					close(cs);
-				}
-			}
-			else
-			{
+
 				this->sendMessageToSocket(ERR_TOO_MANY_CONNECTION, cs);
 				this->_tintin.newPost(ERR_TOO_MANY_CONNECTION_LOG);
 				sleep(1);

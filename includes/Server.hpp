@@ -51,11 +51,13 @@ private:
 	void		cleanOldClient();
 	void		catchAllSignal();
 
-	int 			_socket;
-	unsigned long	_nbClient;
-
-	char			_buffer[Server::BUFFER + 1];
-	int				_iterBuffer;
+	int 						_socket;
+	unsigned long		_nbClient;
+	int							*_fds;
+	int							_port;
+	int							_maxFd;
+	char						_buffer[Server::BUFFER + 1];
+	int							_iterBuffer;
 
 	std::list<int>	_child;
 	Tintin_reporter	_tintin;
