@@ -20,6 +20,21 @@
 #define SOCKET_ERROR				"Socket error"
 
 Server::Server() {
+	int	i;
+	struct rlimit rlp;
+	if (getrlimit(RLIMIT_NOFILE, &rlp) == -1)
+	{
+		exit(0);
+	}
+	this->_maxFd = rlp.rlim_cur;
+	this->_fds = (int*)malloc(sizeof(int) * this->_maxFd);
+	i = 0;
+	while (i < this->_maxFd)
+	{
+		this->_fds[i] = FD_FREE;
+
+		i++;
+	}
 	this->_tintin.newPost("Server ON");
 	this->_socket 	= -1;
 	this->_iterBuffer = 0;
@@ -63,7 +78,7 @@ void	Server::createServer(int port) {
 	this->_socket = socket(PF_INET, SOCK_STREAM, proto->p_proto);
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = htonl(INADDR_ANY);
+	sin.sin_addr.s_addr = INADDR_ANY;
 	if (bind(this->_socket, (const struct sockaddr *)&sin, sizeof(sin)) == -1)
 	{
 		std::cerr << BIND_ERROR << std::endl;
@@ -74,6 +89,7 @@ void	Server::createServer(int port) {
 	if (this->_socket == -1)
 		return;
 	listen(this->_socket, this->_nbClient);
+	this->_fds[this->_socket] = FD_SERV;
 }
 void	Server::check_fd(int r)
 {
@@ -83,7 +99,12 @@ void	Server::check_fd(int r)
   while ((i < this->_maxFd) && (r > 0))
     {
       if (FD_ISSET(i, &this->_fdRead))
-				this->client_read(i);
+			{
+				if (this->_fds[i] == FD_CLIENT)
+					this->client_read(i);
+				else if (this->_fds[i] == FD_SERV)
+					this->ServerAcceptConnexion();
+			}
       if (FD_ISSET(i, &this->_fdWrite))
 				this->client_write(i);
       if (FD_ISSET(i, &this->_fdRead) ||
@@ -102,23 +123,27 @@ void	Server::init_fd()
 		max = 0;
 		FD_ZERO(&this->_fdRead);
 		FD_ZERO(&this->_fdWrite);
+		std::cout << this->_maxFd << std::endl;
 		while (i < this->_maxFd)
 		{
-			if (this->_fds[i].type != FD_FREE)
+			if (this->_fds[i] != FD_FREE)
 			{
-				FD_SET(i, this->_fdRead);
-				max++;
+				std::cout << i << std::endl;
+				FD_SET(i, &this->_fdRead);
+				max = i;
 			}
 			i++;
 		}
+		FD_SET(this->_socket, &this->_fdRead);
+		std::cout << "after while"<< std::endl;
 		r = select(max + 1, &this->_fdRead, &this->_fdWrite, NULL,NULL);
-		this->ServerAcceptConnexion();
+		std::cout << "after select" << std::endl;
 		this->check_fd(r);
 }
 
 void		Server::ServerAcceptConnexion() {
 	int					cs;
-	unsigned int		cslen;
+	socklen_t		cslen;
 	struct sockaddr_in	csin;
 	std::string			str;
 
@@ -126,13 +151,19 @@ void		Server::ServerAcceptConnexion() {
 	{
 		std::cerr << SOCKET_ERROR << std::endl;
 		this->_tintin.newPost(SOCKET_ERROR);
-		return (-1);
+		exit(0);
 	}
+	cslen = sizeof(csin);
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
-	this->_fds[cs].type = FD_CLIENT;
+	this->_fds[cs] = FD_CLIENT;
 }
 
-std::string Server::client_read(int cs)
+void	Server::client_write(int cs)
+{
+	(void)cs;
+}
+
+void Server::client_read(int cs)
 {
 	int	len;
 
@@ -140,7 +171,7 @@ std::string Server::client_read(int cs)
 	if (len <= 0)
 	{
 		close(cs);
-		this->_fds[cs].type = FD_FREE;
+		this->_fds[cs] = FD_FREE;
 	}
 	else
 	{
@@ -237,30 +268,17 @@ void	Server::catchAllSignal() {
 
 void	Server::launchServer(int port, unsigned long nbClient) {
 
-	int 	cs;
-	int 	pid	= 1;
-
 	this->_nbClient = nbClient;
 	this->createServer(port);
+	std::cout << "after create server" << std::endl;
 	// this->catchAllSignal();
-	cs = this->ServerAcceptConnexion();
-
-					this->_tintin.newPost("New User Added");
-					this->_tintin.newPost("Nbr client: " + std::to_string(this->_child.size()));
-					close(cs);
-
-				this->sendMessageToSocket(ERR_TOO_MANY_CONNECTION, cs);
-				this->_tintin.newPost(ERR_TOO_MANY_CONNECTION_LOG);
-				sleep(1);
-				close(cs);
-			}
-		}
-		else
-			exit(0);
-	}
 	while (1)
 	{
-		this->_tintin.newPost(this->ServerReceiveCmd(cs));
+		this->init_fd();
+		std::cout << "after init fd" << std::endl;
 	}
-	close(cs);
+	this->_tintin.newPost("New User Added");
+	this->_tintin.newPost("Nbr client: " + std::to_string(this->_child.size()));
+	sleep(1);
+
 }

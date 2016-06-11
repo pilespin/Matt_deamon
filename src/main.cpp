@@ -13,7 +13,7 @@
 #include <project.hpp>
 #include "Server.hpp"
 
-#include <errno.h>  
+#include <errno.h>
 #include <sys/file.h>
 
 #define ERROR_NEED_ROOT	"You need to be root to perform this action"
@@ -67,11 +67,12 @@ int main()
 	// int pid;
 	// if ((pid = fork()) == 0)
 	// {
-	check_no_instance_running();
+	//check_no_instance_running();
 	// deamonize();
 
 	Server	s;
-	s.launchServer(4240, 3);
+	std::cout << "Avant launchServer" << std::endl;
+	s.launchServer(4240, 2);
 	// }
 	// while(1) {}
 	return(0);

@@ -29,6 +29,11 @@
 # include <sys/wait.h>
 # include <fcntl.h>
 # include <list>
+#	include <sys/resource.h>
+
+# define FD_FREE	0
+# define FD_SERV	1
+# define FD_CLIENT	2
 
 class Server {
 
@@ -41,16 +46,19 @@ public:
 	void		launchServer(int port, unsigned long nbClient);
 	int			getSocket() const;
 
-	static const int	BUFFER = 2048;
+	static const int	BUFFER = 4;
 
 private:
 	void		createServer(int port);
-	int 		ServerAcceptConnexion();
+	void 		ServerAcceptConnexion();
 	std::string	ServerReceiveCmd(int cs);
 	void		sendMessageToSocket(std::string str, int socket);
 	void		cleanOldClient();
 	void		catchAllSignal();
 	void		init_fd();
+	void		check_fd(int r);
+ 	void		client_read(int cs);
+	void		client_write(int cs);
 
 	int 						_socket;
 	unsigned long		_nbClient;
