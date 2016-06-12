@@ -35,6 +35,12 @@
 # define FD_SERV	1
 # define FD_CLIENT	2
 
+typedef struct s_fd
+{
+	int	type;
+	std::string	str;
+}							t_fd;
+
 class Server {
 
 public:
@@ -51,8 +57,6 @@ public:
 private:
 	void		createServer(int port);
 	void 		ServerAcceptConnexion();
-	std::string	ServerReceiveCmd(int cs);
-	void		sendMessageToSocket(std::string str, int socket);
 	void		cleanOldClient();
 	void		catchAllSignal();
 	void		init_fd();
@@ -62,16 +66,13 @@ private:
 
 	int 						_socket;
 	unsigned long		_nbClient;
-	int							*_fds;
+	t_fd							*_fds;
 	int							_port;
 	int							_maxFd;
 	char						_buffer[Server::BUFFER + 1];
-	int							_iterBuffer;
 	fd_set					_fdRead;
 	fd_set					_fdWrite;
-	int							_max;
 
-	std::list<int>	_child;
 	Tintin_reporter	_tintin;
 
 };

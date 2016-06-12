@@ -27,17 +27,15 @@ Server::Server() {
 		exit(0);
 	}
 	this->_maxFd = rlp.rlim_cur;
-	this->_fds = (int*)malloc(sizeof(int) * this->_maxFd);
+	this->_fds = new t_fd[this->_maxFd];
 	i = 0;
 	while (i < this->_maxFd)
 	{
-		this->_fds[i] = FD_FREE;
-
+		this->_fds[i].type = FD_FREE;
 		i++;
 	}
 	this->_tintin.newPost("Server ON");
 	this->_socket 	= -1;
-	this->_iterBuffer = 0;
 }
 
 Server::~Server()					{
@@ -52,7 +50,6 @@ Server	&Server::operator=(Server const &rhs) {
 	{
 		this->_socket = rhs._socket;
 		this->_nbClient = rhs._nbClient;
-		this->_child = rhs._child;
 	}
 	return (*this);
 }
@@ -89,7 +86,7 @@ void	Server::createServer(int port) {
 	if (this->_socket == -1)
 		return;
 	listen(this->_socket, this->_nbClient);
-	this->_fds[this->_socket] = FD_SERV;
+	this->_fds[this->_socket].type = FD_SERV;
 }
 void	Server::check_fd(int r)
 {
@@ -100,9 +97,9 @@ void	Server::check_fd(int r)
     {
       if (FD_ISSET(i, &this->_fdRead))
 			{
-				if (this->_fds[i] == FD_CLIENT)
+				if (this->_fds[i].type == FD_CLIENT)
 					this->client_read(i);
-				else if (this->_fds[i] == FD_SERV)
+				else if (this->_fds[i].type == FD_SERV)
 					this->ServerAcceptConnexion();
 			}
       if (FD_ISSET(i, &this->_fdWrite))
@@ -126,7 +123,7 @@ void	Server::init_fd()
 		std::cout << this->_maxFd << std::endl;
 		while (i < this->_maxFd)
 		{
-			if (this->_fds[i] != FD_FREE)
+			if (this->_fds[i].type != FD_FREE)
 			{
 				std::cout << i << std::endl;
 				FD_SET(i, &this->_fdRead);
@@ -155,7 +152,7 @@ void		Server::ServerAcceptConnexion() {
 	}
 	cslen = sizeof(csin);
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
-	this->_fds[cs] = FD_CLIENT;
+	this->_fds[cs].type = FD_CLIENT;
 }
 
 void	Server::client_write(int cs)
@@ -171,81 +168,21 @@ void Server::client_read(int cs)
 	if (len <= 0)
 	{
 		close(cs);
-		this->_fds[cs] = FD_FREE;
+		this->_fds[cs].type = FD_FREE;
 	}
 	else
 	{
 		this->_buffer[len] = '\0';
-		this->_tintin.newPost(this->_buffer);
-	}
-}
-
-std::string	Server::ServerReceiveCmd(int cs) {
-
-	std::string		str;
-	int 					len	= 0;
-	int						i;
-	while (1)
-	{
-		// len = recv(cs, &buf, 1, MSG_DONTWAIT);
-		if (this->_iterBuffer)
-			i = this->_iterBuffer;
-		else
+		this->_fds[cs].str += this->_buffer;
+		if (this->_fds[cs].str.find('\n') != std::string::npos)
 		{
-			if (0 >= (len = recv(cs, &this->_buffer, Server::BUFFER, 0)))
-			{
-				close(cs);
+			//Kill matt_daemon
+			if (this->_fds[cs].str == "quit\n")
 				exit(0);
-			}
-			this->_buffer[len] = '\0';
-			i = 0;
-		}
-		while (this->_buffer[i])
-		{
-			if (this->_buffer[i] == '\n')
-			{
-				this->_iterBuffer = i + 1;
-				if (!str.compare("quit"))
-				{
-					/////////////// killer le pere
-					this->_tintin.newPost("Server OFF");
-					close(cs);
-					exit(0);
-				}
-				if (str.length() > 0)
-					return (str);
-				else
-					return ("Empty line from user");
-			}
-			else
-				str += this->_buffer[i];
-			i++;
-		}
-		this->_iterBuffer = 0;
-	}
-	return ("STRANGE ERROR");
-}
-
-void	Server::cleanOldClient() {
-
-	std::list<int>::iterator 	i;
-	int 						status;
-
-	if (this->_child.size() >= this->_nbClient)
-	{
-		i = this->_child.begin();
-		while (i != this->_child.end())
-		{
-			if (waitpid(*i, &status, WNOHANG))
-				this->_child.erase(i);
-			i++;
+			this->_tintin.newPost(this->_fds[cs].str);
+			this->_fds[cs].str.clear();
 		}
 	}
-}
-
-void	Server::sendMessageToSocket(std::string str, int socket) {
-
-	send(socket, str.c_str(), str.length(), 0);
 }
 
 static void	signal(int sig) {
@@ -277,8 +214,5 @@ void	Server::launchServer(int port, unsigned long nbClient) {
 		this->init_fd();
 		std::cout << "after init fd" << std::endl;
 	}
-	this->_tintin.newPost("New User Added");
-	this->_tintin.newPost("Nbr client: " + std::to_string(this->_child.size()));
 	sleep(1);
-
 }
