@@ -63,9 +63,11 @@ private:
 	void		check_fd(int r);
  	void		client_read(int cs);
 	void		client_write(int cs);
+	void		CloseFd();
 
 	int 						_socket;
-	unsigned long		_nbClient;
+	unsigned long		_nbClientMax;
+	unsigned long		_nbClientConnect;
 	t_fd							*_fds;
 	int							_port;
 	int							_maxFd;

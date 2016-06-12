@@ -67,12 +67,11 @@ int main()
 	// int pid;
 	// if ((pid = fork()) == 0)
 	// {
-	//check_no_instance_running();
-	// deamonize();
+	check_no_instance_running();
+	deamonize();
 
 	Server	s;
-	std::cout << "Avant launchServer" << std::endl;
-	s.launchServer(4240, 2);
+	s.launchServer(4242, 2);
 	// }
 	// while(1) {}
 	return(0);

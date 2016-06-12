@@ -26,7 +26,7 @@ public:
 	Tintin_reporter &operator=(Tintin_reporter const &rhs);
 
 	int			getValue() const;
-	void		newPost(std::string post);
+	void		newPost(std::string post, std::string cat);
 	std::string	getTime();
 
 private:

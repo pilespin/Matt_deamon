@@ -34,12 +34,14 @@ Server::Server() {
 		this->_fds[i].type = FD_FREE;
 		i++;
 	}
-	this->_tintin.newPost("Server ON");
+	this->_tintin.newPost("Server ON", "INFO");
 	this->_socket 	= -1;
+	this->_nbClientMax = 0;
+	this->_nbClientConnect = 0;
 }
 
 Server::~Server()					{
-	this->_tintin.newPost("Server OFF");
+	this->_tintin.newPost("Server OFF", "INFO");
 }
 
 Server::Server(Server const &src)	{	*this = src;	}
@@ -49,7 +51,7 @@ Server	&Server::operator=(Server const &rhs) {
 	if (this != &rhs)
 	{
 		this->_socket = rhs._socket;
-		this->_nbClient = rhs._nbClient;
+		this->_nbClientMax = rhs._nbClientMax;
 	}
 	return (*this);
 }
@@ -79,13 +81,13 @@ void	Server::createServer(int port) {
 	if (bind(this->_socket, (const struct sockaddr *)&sin, sizeof(sin)) == -1)
 	{
 		std::cerr << BIND_ERROR << std::endl;
-		this->_tintin.newPost(BIND_ERROR);
+		this->_tintin.newPost(BIND_ERROR, "ERROR");
 		this->_socket = -1;
 		exit(0);
 	}
 	if (this->_socket == -1)
 		return;
-	listen(this->_socket, this->_nbClient);
+	listen(this->_socket, this->_nbClientMax);
 	this->_fds[this->_socket].type = FD_SERV;
 }
 void	Server::check_fd(int r)
@@ -120,21 +122,20 @@ void	Server::init_fd()
 		max = 0;
 		FD_ZERO(&this->_fdRead);
 		FD_ZERO(&this->_fdWrite);
-		std::cout << this->_maxFd << std::endl;
+		this->_nbClientConnect = 0;
 		while (i < this->_maxFd)
 		{
 			if (this->_fds[i].type != FD_FREE)
 			{
-				std::cout << i << std::endl;
 				FD_SET(i, &this->_fdRead);
 				max = i;
 			}
+			if (this->_fds[i].type == FD_CLIENT)
+				this->_nbClientConnect++;
 			i++;
 		}
 		FD_SET(this->_socket, &this->_fdRead);
-		std::cout << "after while"<< std::endl;
 		r = select(max + 1, &this->_fdRead, &this->_fdWrite, NULL,NULL);
-		std::cout << "after select" << std::endl;
 		this->check_fd(r);
 }
 
@@ -147,12 +148,20 @@ void		Server::ServerAcceptConnexion() {
 	if (this->_socket <= 0)
 	{
 		std::cerr << SOCKET_ERROR << std::endl;
-		this->_tintin.newPost(SOCKET_ERROR);
+		this->_tintin.newPost(SOCKET_ERROR, "ERROR");
 		exit(0);
 	}
 	cslen = sizeof(csin);
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
-	this->_fds[cs].type = FD_CLIENT;
+	if (this->_nbClientConnect < this->_nbClientMax)
+	{
+		this->_fds[cs].type = FD_CLIENT;
+	}
+	else
+	{
+		//nbre de clients max
+		close(cs);
+	}
 }
 
 void	Server::client_write(int cs)
@@ -178,20 +187,37 @@ void Server::client_read(int cs)
 		{
 			//Kill matt_daemon
 			if (this->_fds[cs].str == "quit\n")
-				exit(0);
-			this->_tintin.newPost(this->_fds[cs].str);
+			{
+				this->CloseFd();
+			}
+			this->_tintin.newPost(this->_fds[cs].str, "LOG");
 			this->_fds[cs].str.clear();
 		}
 	}
 }
+void	Server::CloseFd()
+{
+	int	i;
 
+	i = 0;
+	while (i < this->_maxFd)
+	{
+		if (this->_fds[i].type == FD_CLIENT)
+		{
+			close(i);
+		}
+		i++;
+		this->_tintin.newPost("Quitting.", "INFO");
+		exit(0);
+	}
+}
 static void	signal(int sig) {
 
 	Tintin_reporter 	t;
 	std::string			str;
 
 	str += "Signal: " + std::to_string(sig);
-	t.newPost(str);
+	t.newPost(str, "INFO");
 	// exit(sig);
 }
 
@@ -203,16 +229,14 @@ void	Server::catchAllSignal() {
 		std::signal(i, signal);
 }
 
-void	Server::launchServer(int port, unsigned long nbClient) {
+void	Server::launchServer(int port, unsigned long nbClientMax) {
 
-	this->_nbClient = nbClient;
+	this->_nbClientMax = nbClientMax;
 	this->createServer(port);
-	std::cout << "after create server" << std::endl;
 	// this->catchAllSignal();
 	while (1)
 	{
 		this->init_fd();
-		std::cout << "after init fd" << std::endl;
 	}
 	sleep(1);
 }
