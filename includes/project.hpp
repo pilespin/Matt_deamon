@@ -17,5 +17,4 @@
 #include <fstream>
 #include <list>
 #include <iterator>
-
 #endif

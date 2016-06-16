@@ -29,6 +29,17 @@
 # include <sys/wait.h>
 # include <fcntl.h>
 # include <list>
+#	include <sys/resource.h>
+
+# define FD_FREE	0
+# define FD_SERV	1
+# define FD_CLIENT	2
+
+typedef struct s_fd
+{
+	int	type;
+	std::string	str;
+}							t_fd;
 
 class Server {
 
@@ -41,23 +52,29 @@ public:
 	void		launchServer(int port, unsigned long nbClient);
 	int			getSocket() const;
 
-	static const int	BUFFER = 2048;
+	static const int	BUFFER = 4;
 
 private:
 	void		createServer(int port);
-	int 		ServerAcceptConnexion();
-	std::string	ServerReceiveCmd(int cs);
-	void		sendMessageToSocket(std::string str, int socket);
+	void 		ServerAcceptConnexion();
 	void		cleanOldClient();
 	void		catchAllSignal();
+	void		init_fd();
+	void		check_fd(int r);
+ 	void		client_read(int cs);
+	void		client_write(int cs);
+	void		CloseFd();
 
-	int 			_socket;
-	unsigned long	_nbClient;
+	int 						_socket;
+	unsigned long		_nbClientMax;
+	unsigned long		_nbClientConnect;
+	t_fd							*_fds;
+	int							_port;
+	int							_maxFd;
+	char						_buffer[Server::BUFFER + 1];
+	fd_set					_fdRead;
+	fd_set					_fdWrite;
 
-	char			_buffer[Server::BUFFER + 1];
-	int				_iterBuffer;
-
-	std::list<int>	_child;
 	Tintin_reporter	_tintin;
 
 };
