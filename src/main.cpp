@@ -17,17 +17,9 @@
 #include <sys/file.h>
 
 #define ERROR_NEED_ROOT	"You need to be root to perform this action"
-#define FILE_LOCK		"matt_daemon.lock"
 
 void deamonize()
 {
-	if (getuid())
-	{
-		std::cerr << ERROR_NEED_ROOT << std::endl;
-		exit(0);
-	}
-
-	setsid();
 	int pid;
 	if ((pid = fork()) < 0)
 	{
@@ -37,15 +29,12 @@ void deamonize()
 	else if (pid > 0)
 		exit(0);
 	// chdir("/");
-	// umask(0);
-	// int id = setsid();
-	// std::cerr << "id :" << id << std::endl;
+	setsid();
+	umask(0);
 
 	// close(STDIN_FILENO);
-	// close(STDOUT_FILENO);
-	// close(STDERR_FILENO);
-
-	// while (1) {}
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 }
 
 void check_no_instance_running()
@@ -57,22 +46,28 @@ void check_no_instance_running()
 	{
 		std::cout << "Matt is not available" << std::endl;
 		close(fd);
-		unlink(FILE_LOCK);
 		exit(0);
 	}
 }
 
+int check_root_acces()
+{
+	if (getuid())
+	{
+		std::cerr << ERROR_NEED_ROOT << std::endl;
+		exit(0);
+	}
+	return (1);
+}
+
 int main()
 {
-	// int pid;
-	// if ((pid = fork()) == 0)
-	// {
+	check_root_acces();
 	check_no_instance_running();
 	deamonize();
 
 	Server	s;
-	s.launchServer(4242, 2);
-	// }
-	// while(1) {}
+	s.launchServer(4242, 3);
+
 	return(0);
 }

@@ -39,9 +39,11 @@ std::ostream &operator<<(std::ostream &o, Tintin_reporter &c) {
 int		Tintin_reporter::getValue() const	{	return (this->_val);	}
 ///////////////////////////////////////////////////////////////////////////////
 
-void	Tintin_reporter::newPost(std::string post, std::string cat) {
+void	Tintin_reporter::newPost(std::string post, std::string cat, bool eol) {
 	std::ofstream Log(LOG_PATH, std::ios::app);
-	Log << this->getTime() << " [ " << cat << " ] - Matt_daemon: " << post << std::endl;
+	Log << this->getTime() << " [ " << cat << " ] - Matt_daemon: " << post;
+	if (eol)
+		Log << std::endl;
 }
 
 std::string	Tintin_reporter::getTime() {
