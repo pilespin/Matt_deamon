@@ -35,8 +35,7 @@
 #define FD_SERV		1
 #define FD_CLIENT	2
 
-#define FILE_LOCK		"matt_daemon.lock"
-//////////////////////// Changer path ///////////////////////////////////////////////
+#define FILE_LOCK		"/var/lock/matt_daemon.lock"
 
 typedef struct s_fd
 {
@@ -55,7 +54,7 @@ public:
 	void		launchServer(int port, unsigned long nbClient);
 	int			getSocket() const;
 
-	static const int	BUFFER = 4;
+	static const int	BUFFER = 1024;
 
 private:
 	void		createServer(int port);

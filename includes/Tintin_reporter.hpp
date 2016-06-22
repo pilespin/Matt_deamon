@@ -16,6 +16,8 @@
 #include <sstream>
 #include <ctime>
 #include <iostream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 class Tintin_reporter {
 

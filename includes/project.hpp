@@ -13,8 +13,9 @@
 #ifndef PROJECT_HPP
 # define PROJECT_HPP
 
+#include <errno.h>
+#include <sys/file.h>
 #include <iostream>
 #include <fstream>
-#include <list>
-#include <iterator>
+
 #endif

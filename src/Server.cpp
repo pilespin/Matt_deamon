@@ -13,11 +13,20 @@
 #include "Tintin_reporter.hpp"
 #include "Server.hpp"
 
-#define ERR_TOO_MANY_CONNECTION 	"Too many connexion on server\n"
 #define ERR_TOO_MANY_CONNECTION_LOG	"Connexion rejeted, max number reached"
 #define PROTO_ERROR					"Proto error"
 #define BIND_ERROR					"Bind error"
 #define SOCKET_ERROR				"Socket error"
+
+static void	quit(int sig) {
+
+	Tintin_reporter 	t;
+
+	t.newPost("Exiting ...", "INFO", 1);
+	t.newPost("Server OFF", "INFO", 1);
+	unlink(FILE_LOCK);
+	exit(sig);
+}
 
 Server::Server() {
 	int				i;
@@ -25,7 +34,7 @@ Server::Server() {
 
 	if (getrlimit(RLIMIT_NOFILE, &rlp) == -1)
 	{
-		exit(0);
+		quit(0);
 	}
 	this->_maxFd = rlp.rlim_cur;
 	this->_fds = new t_fd[this->_maxFd];
@@ -53,6 +62,13 @@ Server	&Server::operator=(Server const &rhs) {
 	{
 		this->_socket = rhs._socket;
 		this->_nbClientMax = rhs._nbClientMax;
+		this->_nbClientConnect = rhs._nbClientConnect;
+		this->_fds = rhs._fds;
+		this->_port = rhs._port;
+		this->_maxFd = rhs._maxFd;
+		this->_buffer[Server::BUFFER + 1] = rhs._buffer[Server::BUFFER + 1];
+		this->_fdRead = rhs._fdRead;
+		this->_fdWrite = rhs._fdWrite;
 	}
 	return (*this);
 }
@@ -74,8 +90,8 @@ void	Server::createServer(int port) {
 	proto = getprotobyname("tcp");
 	if (!proto)
 	{
-		std::cerr << PROTO_ERROR << std::endl;
-		exit(0);
+		this->_tintin.newPost(PROTO_ERROR, "ERROR", 1);
+		quit(0);
 	}
 	this->_socket = socket(PF_INET, SOCK_STREAM, proto->p_proto);
 	sin.sin_family = AF_INET;
@@ -83,10 +99,9 @@ void	Server::createServer(int port) {
 	sin.sin_addr.s_addr = INADDR_ANY;
 	if (bind(this->_socket, (const struct sockaddr *)&sin, sizeof(sin)) == -1)
 	{
-		std::cerr << BIND_ERROR << std::endl;
 		this->_tintin.newPost(BIND_ERROR, "ERROR", 1);
 		this->_socket = -1;
-		exit(0);
+		quit(0);
 	}
 	if (this->_socket == -1)
 		return;
@@ -116,6 +131,11 @@ void	Server::check_fd(int r)
 		i++;
 	}
 }
+
+// void	Server::client_write(int cs)
+// {
+// 	(void)cs;
+// }
 
 void	Server::init_fd()
 {
@@ -158,9 +178,8 @@ void		Server::ServerAcceptConnexion() {
 
 	if (this->_socket <= 0)
 	{
-		std::cerr << SOCKET_ERROR << std::endl;
 		this->_tintin.newPost(SOCKET_ERROR, "ERROR", 1);
-		exit(0);
+		quit(0);
 	}
 	cslen = sizeof(csin);
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
@@ -172,15 +191,10 @@ void		Server::ServerAcceptConnexion() {
 	}
 	else
 	{
-		this->_tintin.newPost("Max client reached, connexion refused", "ERROR", 1);
+		this->_tintin.newPost(ERR_TOO_MANY_CONNECTION_LOG, "ERROR", 1);
 		close(cs);
 	}
 }
-
-// void	Server::client_write(int cs)
-// {
-// 	(void)cs;
-// }
 
 void Server::client_read(int cs)
 {
@@ -208,17 +222,6 @@ void Server::client_read(int cs)
 	}
 }
 
-static void	quit(int sig) {
-
-	Tintin_reporter 	t;
-
-	t.newPost("Exiting ...", "INFO", 1);
-	t.newPost("Server OFF", "INFO", 1);
-	unlink(FILE_LOCK);
-	exit(sig);
-}
-
-
 void	Server::CloseFd()
 {
 	int	i;
@@ -234,7 +237,6 @@ void	Server::CloseFd()
 	}
 	quit(0);
 }
-
 
 static void	signal(int sig) {
 
@@ -263,5 +265,4 @@ void	Server::launchServer(int port, unsigned long nbClientMax) {
 	{
 		this->init_fd();
 	}
-	sleep(1);  /////// WHAT ??
 }

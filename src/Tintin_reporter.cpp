@@ -12,8 +12,9 @@
 
 #include "Tintin_reporter.hpp"
 
-// #define LOG_PATH					 "/var/log/matt_daemon/matt_daemon.log"
-#define LOG_PATH					 "matt_daemon.log"
+#define LOG_PATH					 "/var/log/"
+#define LOG_FOLDER					 "matt_daemon/"
+#define LOG_FILE					 "matt_daemon.log"
 
 Tintin_reporter::Tintin_reporter() 						{	this->_val = 0;	}
 
@@ -40,7 +41,22 @@ int		Tintin_reporter::getValue() const	{	return (this->_val);	}
 ///////////////////////////////////////////////////////////////////////////////
 
 void	Tintin_reporter::newPost(std::string post, std::string cat, bool eol) {
-	std::ofstream Log(LOG_PATH, std::ios::app);
+
+	std::string path = LOG_PATH;
+	path += LOG_FOLDER; 
+	path += LOG_FILE;
+
+	std::string folder = LOG_PATH;
+	folder += LOG_FOLDER;
+
+	struct stat status;
+	stat(folder.c_str(), &status);
+	if (status.st_mode & S_IFDIR)
+	{}
+	else
+		mkdir(folder.c_str(), 0755);
+
+	std::ofstream Log(path, std::ios::app);
 	Log << this->getTime() << " [ " << cat << " ] - Matt_daemon: " << post;
 	if (eol)
 		Log << std::endl;

@@ -13,10 +13,10 @@
 #include <project.hpp>
 #include "Server.hpp"
 
-#include <errno.h>
-#include <sys/file.h>
-
-#define ERROR_NEED_ROOT	"You need to be root to perform this action"
+#define ERROR_NEED_ROOT		"You need to be root to perform this action"
+#define ERROR_NEED_ROOT_LOG	"Attempt to launch whitout root acces"
+#define ERROR_LOCKED_USER	"Matt is not available"
+#define ERROR_LOCKED_LOG	"Attempt to launch a new instance"
 
 void deamonize()
 {
@@ -28,13 +28,16 @@ void deamonize()
 	}
 	else if (pid > 0)
 		exit(0);
-	// chdir("/");
+	chdir("/");
 	setsid();
 	umask(0);
 
 	// close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
+
+	Tintin_reporter 	t;
+	t.newPost("Demonized", "INFO", 1);
 }
 
 void check_no_instance_running()
@@ -44,7 +47,9 @@ void check_no_instance_running()
 	fd = open(FILE_LOCK, O_CREAT);
 	if (flock(fd, LOCK_EX | LOCK_NB))
 	{
-		std::cout << "Matt is not available" << std::endl;
+		std::cout << ERROR_LOCKED_USER << std::endl;
+		Tintin_reporter 	t;
+		t.newPost(ERROR_LOCKED_LOG, "ERROR", 1);
 		close(fd);
 		exit(0);
 	}
@@ -55,6 +60,8 @@ int check_root_acces()
 	if (getuid())
 	{
 		std::cerr << ERROR_NEED_ROOT << std::endl;
+		Tintin_reporter 	t;
+		t.newPost(ERROR_NEED_ROOT_LOG, "ERROR", 1);
 		exit(0);
 	}
 	return (1);
