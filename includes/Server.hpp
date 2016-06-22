@@ -39,7 +39,7 @@
 
 typedef struct s_fd
 {
-	int	type;
+	int			type;
 	std::string	str;
 }							t_fd;
 

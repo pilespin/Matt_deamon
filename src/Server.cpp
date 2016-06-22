@@ -45,7 +45,7 @@ Server::Server() {
 		i++;
 	}
 	this->_tintin.newPost("Server ON", "INFO", 1);
-	this->_socket 	= -1;
+	this->_socket = -1;
 	this->_nbClientMax = 0;
 	this->_nbClientConnect = 0;
 }
@@ -185,7 +185,11 @@ void		Server::ServerAcceptConnexion() {
 	cs = accept(this->_socket, (struct sockaddr *)&csin, &cslen);
 	if (this->_nbClientConnect < this->_nbClientMax)
 	{
-		this->_tintin.newPost("New client", "INFO", 1);
+		char buffer[40];
+		inet_ntop(AF_INET, &(csin.sin_addr), buffer, 40);
+		std::string ip(buffer);
+
+		this->_tintin.newPost("New client, ip: " + ip, "INFO", 1);
 		this->_tintin.newPost("Alive: " + std::to_string(this->_nbClientConnect + 1), "INFO", 1);
 		this->_fds[cs].type = FD_CLIENT;
 	}

@@ -51,7 +51,6 @@ $(ODIR)%.o: $(SDIR)%.$(F_EXT) $(HDR)
 
 clean:
 	@rm -rf $(ODIR)
-	@rm -rf the_norm
 	@rm -rf the_leaks
 
 fclean: clean
