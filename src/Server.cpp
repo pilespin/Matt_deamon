@@ -6,12 +6,13 @@
 /*   By: pilespin <pilespin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/06/05 17:50:53 by pilespin          #+#    #+#             */
-/*   Updated: 2016/06/08 16:31:58 by pilespin         ###   ########.fr       */
+/*   Updated: 2016/06/24 14:47:53 by pilespin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Tintin_reporter.hpp"
 #include "Server.hpp"
+#include <string.h>
 
 #define ERR_TOO_MANY_CONNECTION_LOG	"Connexion rejeted, max number reached"
 #define PROTO_ERROR					"Proto error"
@@ -66,7 +67,6 @@ Server	&Server::operator=(Server const &rhs) {
 		this->_fds = rhs._fds;
 		this->_port = rhs._port;
 		this->_maxFd = rhs._maxFd;
-		this->_buffer[Server::BUFFER + 1] = rhs._buffer[Server::BUFFER + 1];
 		this->_fdRead = rhs._fdRead;
 		this->_fdWrite = rhs._fdWrite;
 	}
@@ -123,19 +123,12 @@ void	Server::check_fd(int r)
 			else if (this->_fds[i].type == FD_SERV)
 				this->ServerAcceptConnexion();
 		}
-		// if (FD_ISSET(i, &this->_fdWrite))
-		// 	this->client_write(i);
 		if (FD_ISSET(i, &this->_fdRead) ||
 			FD_ISSET(i, &this->_fdWrite))
 			r--;
 		i++;
 	}
 }
-
-// void	Server::client_write(int cs)
-// {
-// 	(void)cs;
-// }
 
 void	Server::init_fd()
 {
